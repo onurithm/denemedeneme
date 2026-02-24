@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitTrack - Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">FitTrack <span>Pro</span></div>
+            <div class="navbar-user">
+                <span id="username-display">Yükleniyor...</span>
+                <button class="btn btn-outline" onclick="logout()">Çıkış Yap</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <!-- 1. Bölüm: İstatistik Kartları -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <h3>Toplam Antrenman</h3>
+                <div class="stat-value" id="stat-total-workouts">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Bu Haftaki Antrenman</h3>
+                <div class="stat-value" id="stat-week-workouts">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>En Çok Yapılan</h3>
+                <div class="stat-value text-sm" id="stat-most-used">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Toplam Egzersiz Çeşidi</h3>
+                <div class="stat-value" id="stat-total-exercises">-</div>
+            </div>
+        </section>
+
+        <div class="dashboard-columns">
+            <!-- Sol Kolon -->
+            <div class="column">
+                <!-- 2. Bölüm: Antrenman Kaydı Formu -->
+                <section class="card">
+                    <h2>Yeni Antrenman Kaydı</h2>
+                    <form id="workout-form" onsubmit="saveWorkout(event)">
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label>Egzersiz</label>
+                                <select id="workout-exercise" required>
+                                    <option value="">Seçiniz</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tarih</label>
+                                <input type="date" id="workout-date" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Set</label>
+                                <input type="number" id="workout-sets" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Tekrar</label>
+                                <input type="number" id="workout-reps" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ağırlık (kg)</label>
+                                <input type="number" step="0.5" id="workout-weight" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Notlar (Opsiyonel)</label>
+                            <input type="text" id="workout-notes">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Antrenmanı Kaydet</button>
+                    </form>
+                </section>
+
+                <!-- Geçmiş Antrenmanlar -->
+                <section class="card mt-4">
+                    <h2>Antrenman Geçmişi</h2>
+                    <div id="today-workouts-list" class="workouts-list">
+                        <!-- JS ile dolacak -->
+                        <div class="empty-state">Henüz antrenman yok.</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sağ Kolon -->
+            <div class="column">
+                <!-- 3. Bölüm: Yapay Zeka Analizi -->
+                <section class="card ai-section">
+                    <div class="ai-header">
+                        <h2>Yapay Zeka Analizi</h2>
+                        <button type="button" class="btn btn-primary ai-btn" onclick="getAIAnalysis()">
+                            <svg fill="currentColor" viewBox="0 0 20 20" width="16" height="16">
+                                <path fill-rule="evenodd"
+                                    d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Analiz Al
+                        </button>
+                    </div>
+                    <div id="ai-loading" class="spinner-container" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Yapay Zeka analiz ediyor...</p>
+                    </div>
+                    <div id="ai-result" class="ai-result-box" style="display: none;"></div>
+                </section>
+
+                <!-- 4. Bölüm: Grafikler -->
+                <section class="card mt-4">
+                    <h2>Antrenman Frekansı (Son 30 Gün)</h2>
+                    <div class="chart-container">
+                        <canvas id="frequencyChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="card mt-4">
+                    <div class="flex-between">
+                        <h2>Gelişim Eğrisi</h2>
+                        <select id="chart-exercise-select" onchange="updateProgressionChart()">
+                            <option value="">Egzersiz Seç</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="progressionChart"></canvas>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+    <script>
+        // Check token immediately
+        if (!localStorage.getItem('fittrack_token')) {
+            window.location.href = '/';
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('workout-date').valueAsDate = new Date();
+                initDashboard();
+            });
+        }
+    </script>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="toast">
+        Antrenman başarıyla kaydedildi! ✓
+    </div>
+</body>
+
+</html>
