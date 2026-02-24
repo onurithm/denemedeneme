@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitTrack - Giriş</title>
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        html {
+            background-color: #000;
+        }
+
+        body.center-body {
+            background-color: transparent !important;
+        }
+    </style>
 </head>
 
 <body class="center-body">
@@ -49,6 +58,7 @@
     </div>
 
     <script src="/static/app.js"></script>
+    <script type="module" src="/static/shader_bg.js"></script>
     <script>
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
